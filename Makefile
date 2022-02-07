@@ -12,10 +12,9 @@ showip.so: showip.c
 clean:
 	rm -f showip.so
 
-install:
+install: showip.so
 	if [ -d "/usr/lib/arm-linux-gnueabihf/lxpanel/plugins" ]; then \
 		cp showip.so "/usr/lib/arm-linux-gnueabihf/lxpanel/plugins"; \
-		echo "Installed to "
 	else \
 		if [ -d "/usr/lib/aarch64-linux-gnu/lxpanel/plugins" ]; then \
 			cp showip.so "/usr/lib/aarch64-linux-gnu/lxpanel/plugins"; \
