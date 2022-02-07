@@ -23,11 +23,21 @@ all: $(DEPEND) $(TARGET) library
 $(TARGET): $(OBJS)
 	$(CC) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
-library: 
-	gcc -Wall `pkg-config --cflags gtk+-2.0 lxpanel` -shared -fPIC showip.c toolbox.c toolbox-char-array.c toolbox-line-parser.c toolbox-text-buffer-reader.c -o showip.so `pkg-config --libs lxpanel`
+library:
+	gcc -Wall `pkg-config --cflags gtk+-2.0 lxpanel` -shared -fPIC showip.c -o showip.so `pkg-config --libs lxpanel`
 
 clean:
 	rm -f $(OBJS) showip.so $(TARGET) $(DEPEND)
+
+install:
+	if [ -d "/usr/lib/arm-linux-gnueabihf/lxpanel/plugins" ]; then \
+		cp showip.so "/usr/lib/arm-linux-gnueabihf/lxpanel/plugins"; \
+		echo "Installed to "
+	else \
+		if [ -d "/usr/lib/aarch64-linux-gnu/lxpanel/plugins" ]; then \
+			cp showip.so "/usr/lib/aarch64-linux-gnu/lxpanel/plugins"; \
+		fi \
+	fi
 
 $(DEPEND): $(SRC)
 	@echo 'Creating dependencies files'
