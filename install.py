@@ -1,72 +1,43 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import sys, os, traceback
-from time import sleep
 import time
-import json
-from datetime import datetime, timedelta
 import re
-from subprocess import call
-import signal
-import select # for select.select
-import inspect
+import subprocess
+import os.path
+
 import common
 
 
-EOL = "\r\n"
-
-def signal_handler(signal, frame):
-    print "You pressed exit"
-    exit(0)
-
-def cleanAndExit():
-    sys.exit(0)
-
-# signal handler to handle Ctrl+C and exit server
-signal.signal(signal.SIGINT, signal_handler)
-
-
-# frameAmount is needed by videoClarity, it need to matches the clip length, or smaller if a shorter test is wanted.
 def main():
-    global HTML, allRows, makito_prompt
-    
-    beginTime = time.time()
-    
-    call(["cp", "showip.so", "/usr/lib/arm-linux-gnueabihf/lxpanel/plugins/"])
-   
-    CONFIG = None
-    PATH = "../../.config/lxpanel/LXDE-pi/panels/panel"
+    target_dirs = ["/usr/lib/arm-linux-gnueabihf/lxpanel/plugins/", "/usr/lib/aarch64-linux-gnu/lxpanel/plugins/"]
+    for d in target_dirs:
+        if os.path.isdir(d):
+            subprocess.call(["cp", "showip.so", d])
+            break
+    else:
+        print("Failed to install plugin. Unknown lib directory")
+        return
+
+    config = None
+    path = os.path.expanduser("~/.config/lxpanel/LXDE-pi/panels/panel")
     try:
-        # 
-        CONFIG = open(PATH, 'r').read() 
-    except:
-        print '' # no problem yet
-    
-    if CONFIG == None:
-        try:
-            PATH = "../.config/lxpanel/LXDE-pi/panels/panel"
-            CONFIG = open(PATH, 'r').read() 
-        except:
-            print "Failed to open LXDE-pi/panels/panel"; 
-            return -1
-    
-    MYPLUGIN = 'Plugin {\n  type=showip\n  Config {\n  }\n}'
-    index = CONFIG.find(MYPLUGIN)
+        config = open(path, 'r').read()
+    except FileNotFoundError:
+        print("Failed to open LXDE panel config.")
+        return
+
+    showip_config = 'Plugin {\n  type=showip\n  Config {\n  }\n}'
+    index = config.find(showip_config)
     if index >= 0:
-        print 'Already done'
-        return 0
-    
-    CONFIG = common.ReplaceBetween(CONFIG, 'Plugin {\n  type=volumealsa\n  Config {\n  }\n}\n', 'Plugin', MYPLUGIN+"\n")
-    
-    f = open(PATH, "w")
-    f.write(CONFIG)
-    f.close()
-     
-    call(["lxpanelctl", "restart"])
-     
-    # produce report
-    elapsedTime = time.time() - beginTime
-    print "[FINISH] elapsedTime:" + str(elapsedTime)  
+        print("Plugin was already added to lxpanel")
+        return
+
+    # config = common.ReplaceBetween(config, 'Plugin {\n  type=volumealsa\n  Config {\n  }\n}\n', 'Plugin', showip_config+"\n")
+
+    with open(path, "a") as f:
+        f.write(showip_config)
+
+    subprocess.call(["lxpanelctl", "restart"])
 
 if __name__ == '__main__':
     main()
