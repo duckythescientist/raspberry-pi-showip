@@ -1,33 +1,16 @@
 TYPE=APPLICATION
 
-DEPEND=dependencies
+CFLAGS+=-Wall
 
-SRC=$(wildcard toolbox-*.c)
+.PHONY: all clean install
 
-CFLAGS+=-D_FILE_OFFSET_BITS=64
-LDFLAGS+=-L./libs
+all: showip.so
 
-OBJS = standalone.o
-OBJS+= toolbox-filesystem.o
-OBJS+= toolbox-line-parser.o
-OBJS+= toolbox-char-array.o
-OBJS+= toolbox-flexstring.o
-OBJS+= toolbox-text-buffer-reader.o
-OBJS+= toolbox-tree.o
-OBJS+= toolbox.o
-
-TARGET=standalone
-
-all: $(DEPEND) $(TARGET) library
-
-$(TARGET): $(OBJS)
-	$(CC) -o $(TARGET) $(OBJS) $(LDFLAGS)
-
-library:
+showip.so: showip.c
 	gcc -Wall `pkg-config --cflags gtk+-2.0 lxpanel` -shared -fPIC showip.c -o showip.so `pkg-config --libs lxpanel`
 
 clean:
-	rm -f $(OBJS) showip.so $(TARGET) $(DEPEND)
+	rm -f showip.so
 
 install:
 	if [ -d "/usr/lib/arm-linux-gnueabihf/lxpanel/plugins" ]; then \
@@ -38,11 +21,3 @@ install:
 			cp showip.so "/usr/lib/aarch64-linux-gnu/lxpanel/plugins"; \
 		fi \
 	fi
-
-$(DEPEND): $(SRC)
-	@echo 'Creating dependencies files'
-	@$(SHELL) -ec '$(CC) -MM $(CFLAGS) $(SRC) \
-		| sed '\''s@\(.*\)\.o[ :]@\1.o: Makefile@g'\'' \
-		>$(DEPEND)'
-
-include $(DEPEND)
